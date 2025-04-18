@@ -239,10 +239,7 @@ def train_eval():
         test_data = DADDataset(data_path, p.feature_name, 'testing', toTensor=True, device=device)
     elif p.dataset == 'a3d':
         from src.DataLoader import A3DDataset
-        train_data = A3DDataset(data_path, p.feature_nam￼￼￼
-Feel the vibe, See the style!￼
-
-From April 21st, the T-shirt will be e, 'train', toTensor=True, device=device)
+        train_data = A3DDataset(data_path, p.feature_name, 'train', toTensor=True, device=device)
         test_data = A3DDataset(data_path, p.feature_name, 'test', toTensor=True, device=device)
     elif p.dataset == 'crash':
         from src.DataLoader import CrashDataset
