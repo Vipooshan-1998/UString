@@ -214,7 +214,8 @@ def load_checkpoint(model, optimizer=None, filename='checkpoint.pth.tar', isTrai
 
 def train_eval():
     ### --- CONFIG PATH ---
-    data_path = os.path.join(ROOT_PATH, p.data_path, p.dataset)
+    # data_path = os.path.join(ROOT_PATH, p.data_path, p.dataset)
+    data_path = p.data_path
     # model snapshots
     model_dir = os.path.join(p.output_dir, p.dataset, 'snapshot')
     if not os.path.exists(model_dir):
@@ -238,7 +239,10 @@ def train_eval():
         test_data = DADDataset(data_path, p.feature_name, 'testing', toTensor=True, device=device)
     elif p.dataset == 'a3d':
         from src.DataLoader import A3DDataset
-        train_data = A3DDataset(data_path, p.feature_name, 'train', toTensor=True, device=device)
+        train_data = A3DDataset(data_path, p.feature_nam￼￼￼
+Feel the vibe, See the style!￼
+
+From April 21st, the T-shirt will be e, 'train', toTensor=True, device=device)
         test_data = A3DDataset(data_path, p.feature_name, 'test', toTensor=True, device=device)
     elif p.dataset == 'crash':
         from src.DataLoader import CrashDataset
@@ -338,7 +342,8 @@ def update_final_model(src_file, dest_file):
 
 def test_eval():
     ### --- CONFIG PATH ---
-    data_path = os.path.join(ROOT_PATH, p.data_path, p.dataset)
+    # data_path = os.path.join(ROOT_PATH, p.data_path, p.dataset)
+    data_path = p.data_path
     # result path
     result_dir = os.path.join(p.output_dir, p.dataset, 'test')
     if not os.path.exists(result_dir):

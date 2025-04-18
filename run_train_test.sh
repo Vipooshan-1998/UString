@@ -7,6 +7,7 @@ PHASE=$1
 GPUS=$2
 DATA=$3
 BATCH_SIZE=$4
+DATASET_PATH=$5
 
 LOG_DIR="./logs"
 if [ ! -d $LOG_DIR ]; then
@@ -24,6 +25,7 @@ OUT_DIR=output/UString/vgg16
 case ${PHASE} in
   train)
     CUDA_VISIBLE_DEVICES=$GPUS python main.py \
+      --data_path $DATASET_PATH/obj_feat \
       --dataset $DATA \
       --feature_name vgg16 \
       --phase train \
@@ -34,6 +36,7 @@ case ${PHASE} in
     ;;
   test)
     CUDA_VISIBLE_DEVICES=$GPUS python main.py \
+      --data_path $DATASET_PATH/obj_feat \
       --dataset $DATA \
       --feature_name vgg16 \
       --phase test \
