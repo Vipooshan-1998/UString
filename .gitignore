@@ -3,6 +3,7 @@
 .vscode
 *.pyc
 logs/
+.conda/*
 *output*
 log*
 runs
