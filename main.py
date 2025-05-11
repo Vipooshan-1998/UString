@@ -19,10 +19,14 @@ from tensorboardX import SummaryWriter
 from tqdm import tqdm
 from sklearn.metrics import average_precision_score
 
+from src.DataLoader import DADDataset
+
 seed = 123
 np.random.seed(seed)
 torch.manual_seed(seed)
 ROOT_PATH = os.path.dirname(__file__)
+
+feature_dim = 4096
 
 
 def average_losses(losses_all):
@@ -233,25 +237,27 @@ def train_eval():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     # create data loader
-    if p.dataset == 'dad':
-        from src.DataLoader import DADDataset
-        train_data = DADDataset(data_path, p.feature_name, 'training', toTensor=True, device=device)
-        test_data = DADDataset(data_path, p.feature_name, 'testing', toTensor=True, device=device)
-    elif p.dataset == 'a3d':
-        from src.DataLoader import A3DDataset
-        train_data = A3DDataset(data_path, p.feature_name, 'train', toTensor=True, device=device)
-        test_data = A3DDataset(data_path, p.feature_name, 'test', toTensor=True, device=device)
-    elif p.dataset == 'crash':
-        from src.DataLoader import CrashDataset
-        train_data = CrashDataset(data_path, p.feature_name, 'train', toTensor=True, device=device)
-        test_data = CrashDataset(data_path, p.feature_name, 'test', toTensor=True, device=device)
-    else:
-        raise NotImplementedError
+    # if p.dataset == 'dad':
+
+    train_data = DADDataset(data_path, 'training', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
+    test_data = DADDataset(data_path, 'testing', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
+
+    # elif p.dataset == 'a3d':
+    #     from src.DataLoader import A3DDataset
+    #     train_data = A3DDataset(data_path, p.feature_name, 'train', toTensor=True, device=device)
+    #     test_data = A3DDataset(data_path, p.feature_name, 'test', toTensor=True, device=device)
+    # elif p.dataset == 'crash':
+    #     from src.DataLoader import CrashDataset
+    #     train_data = CrashDataset(data_path, p.feature_name, 'train', toTensor=True, device=device)
+    #     test_data = CrashDataset(data_path, p.feature_name, 'test', toTensor=True, device=device)
+    # else:
+    #     raise NotImplementedError
+
     traindata_loader = DataLoader(dataset=train_data, batch_size=p.batch_size, shuffle=True, drop_last=True)
     testdata_loader = DataLoader(dataset=test_data, batch_size=p.batch_size, shuffle=False, drop_last=True)
     
     # building model
-    model = UString(train_data.dim_feature, p.hidden_dim, p.latent_dim, 
+    model = UString(feature_dim, p.hidden_dim, p.latent_dim, 
                        n_layers=p.num_rnn, n_obj=train_data.n_obj, n_frames=train_data.n_frames, fps=train_data.fps, 
                        with_saa=True, uncertain_ranking=True)
 
@@ -359,23 +365,22 @@ def test_eval():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     # create data loader
-    if p.dataset == 'dad':
-        from src.DataLoader import DADDataset
-        test_data = DADDataset(data_path, p.feature_name, 'testing', toTensor=True, device=device, vis=True)
-    elif p.dataset == 'a3d':
-        from src.DataLoader import A3DDataset
-        test_data = A3DDataset(data_path, p.feature_name, 'test', toTensor=True, device=device, vis=True)
-    elif p.dataset == 'crash':
-        from src.DataLoader import CrashDataset
-        test_data = CrashDataset(data_path, p.feature_name, 'test', toTensor=True, device=device, vis=True)
-    else:
-        raise NotImplementedError
+    # if p.dataset == 'dad':
+    test_data = DADDataset(data_path, 'testing', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
+    # elif p.dataset == 'a3d':
+    #     from src.DataLoader import A3DDataset
+    #     test_data = A3DDataset(data_path, p.feature_name, 'test', toTensor=True, device=device, vis=True)
+    # elif p.dataset == 'crash':
+    #     from src.DataLoader import CrashDataset
+    #     test_data = CrashDataset(data_path, p.feature_name, 'test', toTensor=True, device=device, vis=True)
+    # else:
+    #     raise NotImplementedError
     testdata_loader = DataLoader(dataset=test_data, batch_size=p.batch_size, shuffle=False, drop_last=True)
     num_samples = len(test_data)
     print("Number of testing samples: %d"%(num_samples))
     
     # building model
-    model = UString(test_data.dim_feature, p.hidden_dim, p.latent_dim, 
+    model = UString(feature_dim, p.hidden_dim, p.latent_dim, 
                        n_layers=p.num_rnn, n_obj=test_data.n_obj, n_frames=test_data.n_frames, fps=test_data.fps, 
                        with_saa=True, uncertain_ranking=True)
 
@@ -434,10 +439,16 @@ def test_eval():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_path', type=str, default='./data',
+    parser.add_argument('--data_path', type=str, default='./data/dad',
                         help='The relative path of dataset.')
-    parser.add_argument('--dataset', type=str, default='dad', choices=['a3d', 'dad', 'crash'],
-                        help='The name of dataset. Default: dad')
+    parser.add_argument('--dataset', type=str, default='dad',
+                        help='The name of the dataset.')
+    parser.add_argument('--n_frames', type=int, default=100,
+                        help='no of frames in a video')
+    parser.add_argument('--fps', type=int, default=20,
+                        help='no of fps in a video')
+    parser.add_argument('--toa', type=float, default=None,
+                        help='common toa of all videos')
     parser.add_argument('--base_lr', type=float, default=1e-3,
                         help='The base learning rate. Default: 1e-3')
     parser.add_argument('--epoch', type=int, default=30,
