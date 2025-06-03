@@ -515,6 +515,7 @@ if __name__ == '__main__':
         traindata_loader = DataLoader(dataset=train_dataset, batch_size=p.batch_size, shuffle=True, drop_last=True)
         testdata_loader = DataLoader(dataset=test_dataset, batch_size=p.batch_size, shuffle=False, drop_last=True)
 
+        train_eval(train_dataset, test_dataset, traindata_loader, testdata_loader)
 
     print(f"All best APs: {', '.join(map(str, metrics_arr))}")
     print(f"average AP: {sum(metrics_arr) / folds}")
