@@ -219,7 +219,7 @@ def load_checkpoint(model, optimizer=None, filename='checkpoint.pth.tar', isTrai
     return model, optimizer, start_epoch
 
 
-def train_eval(train_data, test_data, traindata_loader, testdata_loader):
+def train_eval(traindata_loader, testdata_loader):
     ### --- CONFIG PATH ---
     # data_path = os.path.join(ROOT_PATH, p.data_path, p.dataset)
     data_path = p.data_path
@@ -261,7 +261,7 @@ def train_eval(train_data, test_data, traindata_loader, testdata_loader):
     
     # building model
     model = UString(feature_dim, p.hidden_dim, p.latent_dim, 
-                       n_layers=p.num_rnn, n_obj=19, n_frames=train_data.n_frames, fps=train_data.fps, 
+                       n_layers=p.num_rnn, n_obj=19, n_frames=p.n_frames, fps=p.fps, 
                        with_saa=True, uncertain_ranking=True)
 
     # optimizer
@@ -313,7 +313,7 @@ def train_eval(train_data, test_data, traindata_loader, testdata_loader):
                 print('----------------------------------')
                 print("Starting evaluation...")
                 metrics = {}
-                metrics['AP'], metrics['mTTA'], metrics['TTA_R80'] = evaluation(all_pred, all_labels, all_toas, fps=test_data.fps)
+                metrics['AP'], metrics['mTTA'], metrics['TTA_R80'] = evaluation(all_pred, all_labels, all_toas, fps=p.fps)
                 print('----------------------------------')
                 # keep track of validation losses
                 write_test_scalars(logger, k, iter_cur, loss_val, metrics)
@@ -516,7 +516,7 @@ if __name__ == '__main__':
         traindata_loader = DataLoader(dataset=train_dataset, batch_size=p.batch_size, shuffle=True, drop_last=True)
         testdata_loader = DataLoader(dataset=test_dataset, batch_size=p.batch_size, shuffle=False, drop_last=True)
 
-        train_eval(train_dataset, test_dataset, traindata_loader, testdata_loader)
+        train_eval(traindata_loader, testdata_loader)
 
     print(f"All best APs: {', '.join(map(str, metrics_arr))}")
     print(f"average AP: {sum(metrics_arr) / folds}")
