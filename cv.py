@@ -282,6 +282,7 @@ def train_eval(traindata_loader, testdata_loader):
     write_weight_histograms(logger, model, 0)
     iter_cur = 0
     best_metric = 0
+    metrics = {'AP': 0.0, 'mTTA': 0.0, 'TTA_R80': 0.0}
     for k in range(p.epoch):
         if k <= start_epoch:
             iter_cur += len(traindata_loader)
@@ -312,7 +313,7 @@ def train_eval(traindata_loader, testdata_loader):
                 loss_val = average_losses(losses_all)
                 print('----------------------------------')
                 print("Starting evaluation...")
-                metrics = {}
+                metrics = {'AP': 0.0, 'mTTA': 0.0, 'TTA_R80': 0.0}
                 metrics['AP'], metrics['mTTA'], metrics['TTA_R80'] = evaluation(all_pred, all_labels, all_toas, fps=p.fps)
                 print('----------------------------------')
                 # keep track of validation losses
