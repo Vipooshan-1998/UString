@@ -516,6 +516,6 @@ if __name__ == '__main__':
         testdata_loader = DataLoader(dataset=test_dataset, batch_size=p.batch_size, shuffle=False, drop_last=True)
 
 
-    print(f"All best APs: {", ".join(map(str, metrics_arr))}")
+    print(f"All best APs: {', '.join(map(str, metrics_arr))}")
     print(f"average AP: {sum(metrics_arr) / folds}")
     
