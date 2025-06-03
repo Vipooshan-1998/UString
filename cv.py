@@ -466,7 +466,7 @@ if __name__ == '__main__':
                         help='The number of RNN cells for each timestamp. Default: 1')
     parser.add_argument('--feature_name', type=str, default='vgg16', choices=['vgg16', 'res101'],
                         help='The name of feature embedding methods. Default: vgg16')
-    parser.add_argument('--test_iter', type=int, default=64,
+    parser.add_argument('--test_iter', type=int, default=100,
                         help='The number of iteration to perform a evaluation process. Default: 64')
     parser.add_argument('--hidden_dim', type=int, default=256,
                         help='The dimension of hidden states in RNN. Default: 256')
