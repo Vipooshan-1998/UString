@@ -261,7 +261,7 @@ def train_eval(train_data, test_data, traindata_loader, testdata_loader):
     
     # building model
     model = UString(feature_dim, p.hidden_dim, p.latent_dim, 
-                       n_layers=p.num_rnn, n_obj=train_data.n_obj, n_frames=train_data.n_frames, fps=train_data.fps, 
+                       n_layers=p.num_rnn, n_obj=19, n_frames=train_data.n_frames, fps=train_data.fps, 
                        with_saa=True, uncertain_ranking=True)
 
     # optimizer
@@ -509,6 +509,7 @@ if __name__ == '__main__':
     for fold, (train_idx, test_idx) in enumerate(kf.split(dataset)):
 
         print('running split:', fold+1)
+
         train_dataset = Subset(dataset, train_idx)
         test_dataset = Subset(dataset, test_idx)
 
