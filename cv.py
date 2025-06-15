@@ -286,6 +286,7 @@ def train_eval(traindata_loader, testdata_loader):
         if k <= start_epoch:
             iter_cur += len(traindata_loader)
             continue
+        print("traindata_loader: ", len(traindata_loader))
         for i, (batch_xs, batch_ys, graph_edges, edge_weights, batch_toas) in enumerate(traindata_loader):
             # ipdb.set_trace()
             optimizer.zero_grad()
