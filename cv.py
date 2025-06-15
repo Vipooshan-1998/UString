@@ -531,3 +531,6 @@ if __name__ == '__main__':
     print(f"All best APs: {', '.join(map(str, metrics_arr))}")
     print(f"average AP: {sum(metrics_arr) / folds}")
     
+    print(f"All best mTTAs: {', '.join(map(str, tta_arr))}")
+    print(f"Average mTTA: {sum(tta_arr) / folds}")
+
