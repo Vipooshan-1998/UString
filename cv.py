@@ -306,6 +306,9 @@ def train_eval(traindata_loader, testdata_loader):
             iter_cur += 1
             # test and evaluate the model
             if iter_cur % p.test_iter == 0:
+                print('entering to eval')
+                print('iter_cur', iter_cur)
+                print('p.test_iter', p.test_iter)
                 model.eval()
                 all_pred, all_labels, all_toas, losses_all = test_all(testdata_loader, model)
                 model.train()
