@@ -304,6 +304,7 @@ def train_eval(traindata_loader, testdata_loader):
             write_scalars(logger, k, iter_cur, losses, lr)
             
             iter_cur += 1
+            print('iter_cur', iter_cur)
             # test and evaluate the model
             if iter_cur % p.test_iter == 0:
                 print('entering to eval')
