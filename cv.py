@@ -31,6 +31,7 @@ feature_dim = 4096
 
 
 metrics_arr = []
+tta_arr = []
 
 def average_losses(losses_all):
     total_loss, cross_entropy, log_posterior, log_prior, aux_loss, rank_loss = 0, 0, 0, 0, 0, 0
@@ -307,21 +308,21 @@ def train_eval(traindata_loader, testdata_loader):
             iter_cur += 1
             print('iter_cur', iter_cur)
             # test and evaluate the model
-            if iter_cur % p.test_iter == 0:
-                print('entering to eval')
-                print('iter_cur', iter_cur)
-                print('p.test_iter', p.test_iter)
-                model.eval()
-                all_pred, all_labels, all_toas, losses_all = test_all(testdata_loader, model)
-                model.train()
-                loss_val = average_losses(losses_all)
-                print('----------------------------------')
-                print("Starting evaluation...")
-                metrics = {}
-                metrics['AP'], metrics['mTTA'], metrics['TTA_R80'] = evaluation(all_pred, all_labels, all_toas, fps=p.fps)
-                print('----------------------------------')
-                # keep track of validation losses
-                write_test_scalars(logger, k, iter_cur, loss_val, metrics)
+            # if iter_cur % p.test_iter == 0:
+        print('entering to eval')
+        print('iter_cur', iter_cur)
+        print('p.test_iter', p.test_iter)
+        model.eval()
+        all_pred, all_labels, all_toas, losses_all = test_all(testdata_loader, model)
+        model.train()
+        loss_val = average_losses(losses_all)
+        print('----------------------------------')
+        print("Starting evaluation...")
+        metrics = {}
+        metrics['AP'], metrics['mTTA'], metrics['TTA_R80'] = evaluation(all_pred, all_labels, all_toas, fps=p.fps)
+        print('----------------------------------')
+        # keep track of validation losses
+        write_test_scalars(logger, k, iter_cur, loss_val, metrics)
 
         # save model
         model_file = os.path.join(model_dir, 'bayesian_gcrnn_model_%02d.pth'%(k))
@@ -330,6 +331,7 @@ def train_eval(traindata_loader, testdata_loader):
                     'optimizer': optimizer.state_dict()}, model_file)
         if metrics['AP'] > best_metric:
             best_metric = metrics['AP']
+            best_tta = metrics['mTTA']
             # update best model file
             update_final_model(model_file, os.path.join(model_dir, 'final_model.pth'))
         print('Model has been saved as: %s'%(model_file))
@@ -339,6 +341,7 @@ def train_eval(traindata_loader, testdata_loader):
         write_weight_histograms(logger, model, k+1)
 
         metrics_arr.append(best_metric)
+        tta_arr.append(best_tta)
     logger.close()
 
 
