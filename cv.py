@@ -516,6 +516,8 @@ if __name__ == '__main__':
 
         train_dataset = Subset(dataset, train_idx)
         test_dataset = Subset(dataset, test_idx)
+        print("len(train_dataset): ", len(train_dataset))
+        print("len(test_dataset): ", len(test_dataset))
 
         traindata_loader = DataLoader(dataset=train_dataset, batch_size=p.batch_size, shuffle=True, drop_last=True)
         testdata_loader = DataLoader(dataset=test_dataset, batch_size=p.batch_size, shuffle=False, drop_last=True)
