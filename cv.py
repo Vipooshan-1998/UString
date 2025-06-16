@@ -282,7 +282,8 @@ def train_eval(traindata_loader, testdata_loader):
     # write histograms
     write_weight_histograms(logger, model, 0)
     iter_cur = 0
-    best_metric = 0
+    best_metric = -1
+    best_tta = -1
     for k in range(p.epoch):
         if k <= start_epoch:
             iter_cur += len(traindata_loader)
@@ -340,8 +341,8 @@ def train_eval(traindata_loader, testdata_loader):
         # write histograms
         write_weight_histograms(logger, model, k+1)
 
-        metrics_arr.append(best_metric)
-        tta_arr.append(best_tta)
+    metrics_arr.append(best_metric)
+    tta_arr.append(best_tta)
     logger.close()
 
 
