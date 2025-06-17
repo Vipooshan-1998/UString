@@ -527,8 +527,8 @@ if __name__ == '__main__':
         print("len(train_dataset): ", len(train_dataset))
         print("len(test_dataset): ", len(test_dataset))
 
-        traindata_loader = DataLoader(dataset=train_dataset, batch_size=p.batch_size, shuffle=True, drop_last=True)
-        testdata_loader = DataLoader(dataset=test_dataset, batch_size=p.batch_size, shuffle=False, drop_last=True)
+        traindata_loader = DataLoader(dataset=train_dataset, batch_size=p.batch_size, shuffle=True, drop_last=True, num_workers=8)
+        testdata_loader = DataLoader(dataset=test_dataset, batch_size=p.batch_size, shuffle=False, drop_last=True, num_workers=8)
 
         train_eval(traindata_loader, testdata_loader)
 
