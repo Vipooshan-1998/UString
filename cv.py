@@ -220,7 +220,7 @@ def load_checkpoint(model, optimizer=None, filename='checkpoint.pth.tar', isTrai
     return model, optimizer, start_epoch
 
 
-def train_eval(traindata_loader, testdata_loader):
+def train_eval(traindata_loader, testdata_loader, fold):
     ### --- CONFIG PATH ---
     # data_path = os.path.join(ROOT_PATH, p.data_path, p.dataset)
     data_path = p.data_path
@@ -286,6 +286,8 @@ def train_eval(traindata_loader, testdata_loader):
     best_tta = -1
     print("fps: ", p.fps)
     for k in range(p.epoch):
+        print('----------------------------------')
+        
         if k <= start_epoch:
             iter_cur += len(traindata_loader)
             continue
@@ -306,14 +308,15 @@ def train_eval(traindata_loader, testdata_loader):
             # write the losses info
             lr = optimizer.param_groups[0]['lr']
             # write_scalars(logger, k, iter_cur, losses, lr)
+            print('fold: %d, epoch: %d, iter: %d' % (fold, k, iter_cur))
             
             iter_cur += 1
-            print('iter_cur', iter_cur)
+            # print('iter_cur', iter_cur)
             # test and evaluate the model
             # if iter_cur % p.test_iter == 0:
         print('entering to eval')
-        print('iter_cur', iter_cur)
-        print('p.test_iter', p.test_iter)
+        # print('iter_cur', iter_cur)
+        # print('p.test_iter', p.test_iter)
         model.eval()
         all_pred, all_labels, all_toas, losses_all = test_all(testdata_loader, model)
         model.train()
@@ -530,7 +533,7 @@ if __name__ == '__main__':
         traindata_loader = DataLoader(dataset=train_dataset, batch_size=p.batch_size, shuffle=True, drop_last=False)
         testdata_loader = DataLoader(dataset=test_dataset, batch_size=p.batch_size, shuffle=False, drop_last=False)
 
-        train_eval(traindata_loader, testdata_loader)
+        train_eval(traindata_loader, testdata_loader, fold+1)
 
     print(f"All best APs: {', '.join(map(str, metrics_arr))}")
     print(f"average AP: {sum(metrics_arr) / folds}")
