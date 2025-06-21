@@ -305,7 +305,7 @@ def train_eval(traindata_loader, testdata_loader):
             optimizer.step()
             # write the losses info
             lr = optimizer.param_groups[0]['lr']
-            write_scalars(logger, k, iter_cur, losses, lr)
+            # write_scalars(logger, k, iter_cur, losses, lr)
             
             iter_cur += 1
             print('iter_cur', iter_cur)
