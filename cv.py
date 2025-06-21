@@ -286,11 +286,11 @@ def train_eval(traindata_loader, testdata_loader, fold):
     best_tta = -1
     print("fps: ", p.fps)
     for k in range(p.epoch):
-        print('-------------------------------------------------')
+        print(f'--------------------------------- Fold: {fold} ---------------------------------')
         if k <= start_epoch:
             iter_cur += len(traindata_loader)
             continue
-        print("traindata_loader: ", len(traindata_loader))
+        # print("traindata_loader: ", len(traindata_loader))
         for i, (batch_xs, batch_ys, graph_edges, edge_weights, batch_toas) in enumerate(traindata_loader):
             # ipdb.set_trace()
             optimizer.zero_grad()
@@ -313,7 +313,7 @@ def train_eval(traindata_loader, testdata_loader, fold):
             # print('iter_cur', iter_cur)
             # test and evaluate the model
             # if iter_cur % p.test_iter == 0:
-        print('entering to eval')
+        # print('entering to eval')
         # print('iter_cur', iter_cur)
         # print('p.test_iter', p.test_iter)
         model.eval()
