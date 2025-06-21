@@ -285,8 +285,8 @@ def train_eval(traindata_loader, testdata_loader, fold):
     best_metric = -1
     best_tta = -1
     print("fps: ", p.fps)
+    print(f'--------------------------------- Fold: {fold} ---------------------------------')   
     for k in range(p.epoch):
-        print(f'--------------------------------- Fold: {fold} ---------------------------------')
         if k <= start_epoch:
             iter_cur += len(traindata_loader)
             continue
