@@ -286,8 +286,7 @@ def train_eval(traindata_loader, testdata_loader, fold):
     best_tta = -1
     print("fps: ", p.fps)
     for k in range(p.epoch):
-        print('----------------------------------')
-        
+        print('-------------------------------------------------')
         if k <= start_epoch:
             iter_cur += len(traindata_loader)
             continue
@@ -337,8 +336,8 @@ def train_eval(traindata_loader, testdata_loader, fold):
         if metrics['AP'] > best_metric:
             best_metric = metrics['AP']
             best_tta = metrics['mTTA']
-            print('Best AP for current fold', best_metric)
-            print('Best APs mTTA', best_tta)
+            print(f'Best AP for current fold {k}: ', best_metric)
+            print('Best APs mTTA: ', best_tta)
             # update best model file
             update_final_model(model_file, os.path.join(model_dir, 'final_model.pth'))
         print('Model has been saved as: %s'%(model_file))
