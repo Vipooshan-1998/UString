@@ -215,7 +215,6 @@ def load_checkpoint(model, optimizer=None, filename='checkpoint.pth.tar', isTrai
 
     return model, optimizer, start_epoch
 
-
 def train_eval():
     ### --- CONFIG PATH ---
     # data_path = os.path.join(ROOT_PATH, p.data_path, p.dataset)
@@ -283,6 +282,7 @@ def train_eval():
         if k <= start_epoch:
             iter_cur += len(traindata_loader)
             continue
+        # print("traindata_loader: ", len(traindata_loader))
         for i, (batch_xs, batch_ys, graph_edges, edge_weights, batch_toas) in enumerate(traindata_loader):
             # ipdb.set_trace()
             optimizer.zero_grad()
@@ -298,22 +298,27 @@ def train_eval():
             optimizer.step()
             # write the losses info
             lr = optimizer.param_groups[0]['lr']
-            write_scalars(logger, k, iter_cur, losses, lr)
+            # write_scalars(logger, k, iter_cur, losses, lr)
+            print('epoch: %d, iter: %d' % (fold, k, iter_cur))
             
             iter_cur += 1
+            # print('iter_cur', iter_cur)
             # test and evaluate the model
-            if iter_cur % p.test_iter == 0:
-                model.eval()
-                all_pred, all_labels, all_toas, losses_all = test_all(testdata_loader, model)
-                model.train()
-                loss_val = average_losses(losses_all)
-                print('----------------------------------')
-                print("Starting evaluation...")
-                metrics = {}
-                metrics['AP'], metrics['mTTA'], metrics['TTA_R80'] = evaluation(all_pred, all_labels, all_toas, fps=test_data.fps)
-                print('----------------------------------')
-                # keep track of validation losses
-                write_test_scalars(logger, k, iter_cur, loss_val, metrics)
+            # if iter_cur % p.test_iter == 0:
+        # print('entering to eval')
+        # print('iter_cur', iter_cur)
+        # print('p.test_iter', p.test_iter)
+        model.eval()
+        all_pred, all_labels, all_toas, losses_all = test_all(testdata_loader, model)
+        model.train()
+        loss_val = average_losses(losses_all)
+        print('----------------------------------')
+        print("Starting evaluation...")
+        metrics = {}
+        metrics['AP'], metrics['mTTA'], metrics['TTA_R80'] = evaluation(all_pred, all_labels, all_toas, fps=p.fps)
+        print('----------------------------------')
+        # keep track of validation losses
+        write_test_scalars(logger, k, iter_cur, loss_val, metrics)
 
         # save model
         model_file = os.path.join(model_dir, 'bayesian_gcrnn_model_%02d.pth'%(k))
@@ -322,6 +327,9 @@ def train_eval():
                     'optimizer': optimizer.state_dict()}, model_file)
         if metrics['AP'] > best_metric:
             best_metric = metrics['AP']
+            best_tta = metrics['mTTA']
+            print(f'Best AP for current fold {k}: ', best_metric)
+            print('Best APs mTTA: ', best_tta)
             # update best model file
             update_final_model(model_file, os.path.join(model_dir, 'final_model.pth'))
         print('Model has been saved as: %s'%(model_file))
@@ -329,7 +337,125 @@ def train_eval():
         scheduler.step(losses['log_posterior'])
         # write histograms
         write_weight_histograms(logger, model, k+1)
+
+    metrics_arr.append(best_metric)
+    tta_arr.append(best_tta)
     logger.close()
+    
+# def train_eval():
+#     ### --- CONFIG PATH ---
+#     # data_path = os.path.join(ROOT_PATH, p.data_path, p.dataset)
+#     data_path = p.data_path
+#     # model snapshots
+#     model_dir = os.path.join(p.output_dir, p.dataset, 'snapshot')
+#     if not os.path.exists(model_dir):
+#         os.makedirs(model_dir)
+#     # tensorboard logging
+#     logs_dir = os.path.join(p.output_dir, p.dataset, 'logs')
+#     if not os.path.exists(logs_dir):
+#         os.makedirs(logs_dir)
+#     logger = SummaryWriter(logs_dir)
+
+#     # gpu options
+#     gpu_ids = [int(id) for id in p.gpus.split(',')]
+#     print("Using GPU devices: ", gpu_ids)
+#     os.environ['CUDA_VISIBLE_DEVICES'] = p.gpus
+#     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+#     # create data loader
+#     # if p.dataset == 'dad':
+
+#     train_data = DADDataset(data_path, 'training', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
+#     test_data = DADDataset(data_path, 'testing', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
+
+#     # elif p.dataset == 'a3d':
+#     #     from src.DataLoader import A3DDataset
+#     #     train_data = A3DDataset(data_path, p.feature_name, 'train', toTensor=True, device=device)
+#     #     test_data = A3DDataset(data_path, p.feature_name, 'test', toTensor=True, device=device)
+#     # elif p.dataset == 'crash':
+#     #     from src.DataLoader import CrashDataset
+#     #     train_data = CrashDataset(data_path, p.feature_name, 'train', toTensor=True, device=device)
+#     #     test_data = CrashDataset(data_path, p.feature_name, 'test', toTensor=True, device=device)
+#     # else:
+#     #     raise NotImplementedError
+
+#     traindata_loader = DataLoader(dataset=train_data, batch_size=p.batch_size, shuffle=True, drop_last=True)
+#     testdata_loader = DataLoader(dataset=test_data, batch_size=p.batch_size, shuffle=False, drop_last=True)
+    
+#     # building model
+#     model = UString(feature_dim, p.hidden_dim, p.latent_dim, 
+#                        n_layers=p.num_rnn, n_obj=train_data.n_obj, n_frames=train_data.n_frames, fps=train_data.fps, 
+#                        with_saa=True, uncertain_ranking=True)
+
+#     # optimizer
+#     optimizer = torch.optim.Adam(model.parameters(), lr=p.base_lr)
+#     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
+
+#     if len(gpu_ids) > 1:
+#         model = torch.nn.DataParallel(model)
+#     model = model.to(device=device)
+#     model.train() # set the model into training status
+
+#     # resume training 
+#     start_epoch = -1
+#     if p.resume:
+#         model, optimizer, start_epoch = load_checkpoint(model, optimizer=optimizer, filename=p.model_file)
+
+#     # write histograms
+#     write_weight_histograms(logger, model, 0)
+#     iter_cur = 0
+#     best_metric = 0
+#     for k in range(p.epoch):
+#         if k <= start_epoch:
+#             iter_cur += len(traindata_loader)
+#             continue
+#         for i, (batch_xs, batch_ys, graph_edges, edge_weights, batch_toas) in enumerate(traindata_loader):
+#             # ipdb.set_trace()
+#             optimizer.zero_grad()
+#             losses, all_outputs, hidden_st = model(batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, nbatch=len(traindata_loader), eval_uncertain=True)
+#             complexity_loss = losses['log_posterior'] - losses['log_prior']
+#             losses['total_loss'] = p.loss_alpha * complexity_loss + losses['cross_entropy']
+#             losses['total_loss'] += p.loss_beta * losses['auxloss']
+#             losses['total_loss'] += p.loss_yita * losses['ranking']
+#             # backward
+#             losses['total_loss'].mean().backward()
+#             # clip gradients
+#             torch.nn.utils.clip_grad_norm_(model.parameters(), 10)
+#             optimizer.step()
+#             # write the losses info
+#             lr = optimizer.param_groups[0]['lr']
+#             write_scalars(logger, k, iter_cur, losses, lr)
+            
+#             iter_cur += 1
+#             # test and evaluate the model
+#             if iter_cur % p.test_iter == 0:
+#                 model.eval()
+#                 all_pred, all_labels, all_toas, losses_all = test_all(testdata_loader, model)
+#                 model.train()
+#                 loss_val = average_losses(losses_all)
+#                 print('----------------------------------')
+#                 print("Starting evaluation...")
+#                 metrics = {}
+#                 metrics['AP'], metrics['mTTA'], metrics['TTA_R80'] = evaluation(all_pred, all_labels, all_toas, fps=test_data.fps)
+#                 print('----------------------------------')
+#                 # keep track of validation losses
+#                 write_test_scalars(logger, k, iter_cur, loss_val, metrics)
+
+#         # save model
+#         model_file = os.path.join(model_dir, 'bayesian_gcrnn_model_%02d.pth'%(k))
+#         torch.save({'epoch': k,
+#                     'model': model.module.state_dict() if len(gpu_ids)>1 else model.state_dict(),
+#                     'optimizer': optimizer.state_dict()}, model_file)
+#         if metrics['AP'] > best_metric:
+#             best_metric = metrics['AP']
+#             # update best model file
+#             update_final_model(model_file, os.path.join(model_dir, 'final_model.pth'))
+#         print('Model has been saved as: %s'%(model_file))
+
+#         scheduler.step(losses['log_posterior'])
+#         # write histograms
+#         write_weight_histograms(logger, model, k+1)
+#     logger.close()
 
 
 def update_final_model(src_file, dest_file):
