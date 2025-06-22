@@ -279,6 +279,7 @@ def train_eval():
     iter_cur = 0
     best_metric = 0
     for k in range(p.epoch):
+        print(f'--------------------------------- Epoch: {k} ---------------------------------')
         if k <= start_epoch:
             iter_cur += len(traindata_loader)
             continue
@@ -299,7 +300,7 @@ def train_eval():
             # write the losses info
             lr = optimizer.param_groups[0]['lr']
             # write_scalars(logger, k, iter_cur, losses, lr)
-            print('epoch: %d, iter: %d' % (fold, k, iter_cur))
+            print('epoch: %d, iter: %d' % (k, iter_cur))
             
             iter_cur += 1
             # print('iter_cur', iter_cur)
