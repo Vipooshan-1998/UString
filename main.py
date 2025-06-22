@@ -339,8 +339,6 @@ def train_eval():
         # write histograms
         write_weight_histograms(logger, model, k+1)
 
-    metrics_arr.append(best_metric)
-    tta_arr.append(best_tta)
     logger.close()
     
 # def train_eval():
