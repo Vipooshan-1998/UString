@@ -173,7 +173,7 @@ class DADDatasetCV(Dataset):
         self.n_frames = n_frames
         self.n_obj = 19
         self.fps = fps
-        self.dim_feature = 4096
+        self.dim_feature = 6
 
         filepath = os.path.join(self.data_path)
         self.files_list = self.get_filelist(filepath)
