@@ -207,7 +207,7 @@ class DADDatasetCV(Dataset):
         assert os.path.exists(data_file)
         try:
             data = np.load(data_file)
-            features = data['data']  # n_frames x 20 x 4096
+            features =  data['det']  # n_frames x 20 x 4096
             labels = data['labels']  # 2
             detections = data['det']  # n_frames x 19 x 6
         except:
