@@ -528,8 +528,8 @@ if __name__ == '__main__':
         test_dataset = Subset(dataset, test_idx)
         print("len(train_dataset): ", len(train_dataset))
         print("len(test_dataset): ", len(test_dataset))
-        print("train_dataset shape: ", train_dataset[0].shape)
-        print("test_dataset shape: ", test_dataset[0].shape)
+        print("train_dataset shape: ", train_dataset[0][0].shape)
+        print("test_dataset shape: ", test_dataset[0][0].shape)
 
         traindata_loader = DataLoader(dataset=train_dataset, batch_size=p.batch_size, shuffle=True, drop_last=False)
         testdata_loader = DataLoader(dataset=test_dataset, batch_size=p.batch_size, shuffle=False, drop_last=False)
