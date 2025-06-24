@@ -208,6 +208,8 @@ class DADDatasetCV(Dataset):
         try:
             data = np.load(data_file)
             features =  data['det']  # n_frames x 20 x 4096
+            features = np.concatenate([np.full((features.shape[0], 1, 6), [0, 0, 1280, 720, 1, 0], dtype=np.float32), 
+                                       features], axis=1)
             labels = data['labels']  # 2
             detections = data['det']  # n_frames x 19 x 6
         except:
