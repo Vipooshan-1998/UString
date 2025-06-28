@@ -217,7 +217,8 @@ class DADDatasetCV(Dataset):
             original_data = data['data']       # shape: (n_frames, 20, 4096)
 
             # Step 1: Pad features from 6 → 4096 directly
-            padded_features = np.pad(features, ((0, 0), (0, 0), (0, 4096 - features.shape[2])))
+            padded_features = np.pad(features, ((0, 0), (0, 0), (0, 4096 - features.shape[2])), mode='constant', 
+                                     constant_values=0)
 
             # Step 2: Extract and append the 0th index (preserving shape)
             first_frame = original_data[:, 0:1, :]  # shape: (n_frames, 1, 4096)
