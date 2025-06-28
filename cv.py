@@ -27,8 +27,8 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 ROOT_PATH = os.path.dirname(__file__)
 
-# feature_dim = 4096
-feature_dim = 6
+feature_dim = 4096
+# feature_dim = 6
 
 
 metrics_arr = []
