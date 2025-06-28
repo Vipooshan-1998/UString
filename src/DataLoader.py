@@ -225,6 +225,7 @@ class DADDatasetCV(Dataset):
 
             # Step 3: Concatenate to get final output
             features = np.concatenate([padded_features, first_frame], axis=1)
+            print(features.shape)
             
             labels = data['labels']  # 2
             detections = data['det']  # n_frames x 19 x 6
