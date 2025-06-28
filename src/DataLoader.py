@@ -207,11 +207,23 @@ class DADDatasetCV(Dataset):
         assert os.path.exists(data_file)
         try:
             data = np.load(data_file)
-            features =  data['det']  # n_frames x 20 x 4096
+            # features =  data['det']  # n_frames x 20 x 4096
             # DoTa
             # features = np.concatenate([np.full((features.shape[0], 1, 6), [0, 0, 1280, 720, 1, 0], dtype=np.float32), features], axis=1) 
             # DaDa
-            features = np.concatenate([np.full((features.shape[0], 1, 6), [0, 0, 1584, 660, 1, 0], dtype=np.float32), features], axis=1)
+            # features = np.concatenate([np.full((features.shape[0], 1, 6), [0, 0, 1584, 660, 1, 0], dtype=np.float32), features], axis=1)
+
+            features = data['det']             # shape: (n_frames, 19, 6)
+            original_data = data['data']       # shape: (n_frames, 20, 4096)
+
+            # Step 1: Pad features from 6 → 4096 directly
+            padded_features = np.pad(features, ((0, 0), (0, 0), (0, 4096 - features.shape[2])))
+
+            # Step 2: Extract and append the 0th index (preserving shape)
+            first_frame = original_data[:, 0:1, :]  # shape: (n_frames, 1, 4096)
+
+            # Step 3: Concatenate to get final output
+            features = np.concatenate([padded_features, first_frame], axis=1)
             
             labels = data['labels']  # 2
             detections = data['det']  # n_frames x 19 x 6
