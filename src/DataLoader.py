@@ -131,7 +131,7 @@ class DADDataset(Dataset):
         data_file = os.path.join(self.data_path, self.phase, self.files_list[index])
         assert os.path.exists(data_file)
         try:
-            print("Mahmood Method - Geometrics")
+            # print("Mahmood Method - Geometrics")
             data = np.load(data_file)
             # features = data['data']  # n_frames x 20 x 4096
             features = data['det']             # shape: (n_frames, 19, 6)
