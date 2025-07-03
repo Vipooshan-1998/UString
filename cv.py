@@ -21,6 +21,7 @@ from sklearn.metrics import average_precision_score
 
 from src.DataLoader import DADDatasetCV, DADDataset
 from sklearn.model_selection import KFold
+import torch.nn.functional as F
 
 seed = 123
 np.random.seed(seed)
