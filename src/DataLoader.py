@@ -85,171 +85,8 @@ import itertools
 #         else:
 #             return features, labels, graph_edges, edge_weights, toa
 
-# Mahmood
-class DADDataset(Dataset):
-    def __init__(self, data_path, phase='training', toTensor=False, device=torch.device('cuda'), vis=False, n_frames=100, fps=20, toa=None):
-        self.data_path = os.path.join(data_path, "obj_feat")
-        self.toa_dir = os.path.join(data_path, "toas")
-        self.phase = phase
-        self.toTensor = toTensor
-        self.toa = toa
-        self.device = device
-        self.vis = vis
-        self.n_frames = n_frames
-        self.n_obj = 19
-        self.fps = fps
-        self.dim_feature = 4096
-
-        filepath = os.path.join(self.data_path, phase)
-        self.files_list = self.get_filelist(filepath)
-
-    def __len__(self):
-        data_len = len(self.files_list)
-        return data_len
-
-    # def get_feature_dim(self, feature_name):
-    #     if feature_name == 'vgg16':
-    #         return 4096
-    #     elif feature_name == 'res101':
-    #         return 2048
-    #     else:
-    #         raise ValueError
-
-    def get_filelist(self, filepath):
-        assert os.path.exists(filepath), "Directory does not exist: %s"%(filepath)
-        file_list = []
-        for filename in sorted(os.listdir(filepath)):
-            file_list.append(filename)
-        return file_list
-    
-    def get_toa(self, filename):
-        with open(os.path.join(self.toa_dir, filename[:-4] + ".txt")) as file:
-            toa = int(file.read())
-        return toa
-
-    def __getitem__(self, index):
-        data_file = os.path.join(self.data_path, self.phase, self.files_list[index])
-        assert os.path.exists(data_file)
-        try:
-            # print("Mahmood Method - Geometrics")
-            data = np.load(data_file)
-            # features = data['data']  # n_frames x 20 x 4096
-            features = data['det']             # shape: (n_frames, 19, 6)
-            original_data = data['data']       # shape: (n_frames, 20, 4096)
-
-            # Step 1: Pad features from 6 → 4096 directly
-            padded_features = np.pad(features, ((0, 0), (0, 0), (0, 4096 - features.shape[2])), mode='constant', 
-                                     constant_values=0)
-
-            # Step 2: Extract and append the 0th index (preserving shape)
-            first_frame = original_data[:, 0:1, :]  # shape: (n_frames, 1, 4096)
-
-            # Step 3: Concatenate to get final output
-            features = np.concatenate([padded_features, first_frame], axis=1)
-            
-            labels = data['labels']  # 2
-            detections = data['det']  # n_frames x 19 x 6
-        except:
-            raise IOError('Load data error! File: %s'%(data_file))
-        if labels[1] > 0:
-            if self.toa != None:
-                toa = [self.toa]
-            else:
-                toa = [self.get_toa(self.files_list[index])]
-        else:
-            toa = [self.n_frames + 1]
-        
-        graph_edges, edge_weights = generate_st_graph(detections)
-
-        if self.toTensor:
-            features = torch.Tensor(features).to(self.device)         #  100 x 20 x 4096
-            labels = torch.Tensor(labels).to(self.device)
-            graph_edges = torch.Tensor(graph_edges).long().to(self.device)
-            edge_weights = torch.Tensor(edge_weights).to(self.device)
-            toa = torch.Tensor(toa).to(self.device)
-
-        if self.vis:
-            video_id = str(data['ID'])[5:11]  # e.g.: b001_000490_*
-            return features, labels, graph_edges, edge_weights, toa, detections, video_id
-        else:
-            return features, labels, graph_edges, edge_weights, toa
-
-class DADDatasetCV(Dataset):
-    def __init__(self, data_path, phase='training', toTensor=False, device=torch.device('cuda'), vis=False, n_frames=100, fps=20, toa=None):
-        self.data_path = os.path.join(data_path, "obj_feat")
-        self.toa_dir = os.path.join(data_path, "toas")
-        self.phase = phase
-        self.toTensor = toTensor
-        self.toa = toa
-        self.device = device
-        self.vis = vis
-        self.n_frames = n_frames
-        self.n_obj = 19
-        self.fps = fps
-        self.dim_feature = 4096
-
-        filepath = os.path.join(self.data_path)
-        self.files_list = self.get_filelist(filepath)
-
-    def __len__(self):
-        data_len = len(self.files_list)
-        return data_len
-
-    # def get_feature_dim(self, feature_name):
-    #     if feature_name == 'vgg16':
-    #         return 4096
-    #     elif feature_name == 'res101':
-    #         return 2048
-    #     else:
-    #         raise ValueError
-
-    def get_filelist(self, filepath):
-        assert os.path.exists(filepath), "Directory does not exist: %s"%(filepath)
-        file_list = []
-        for filename in sorted(os.listdir(filepath)):
-            file_list.append(filename)
-        return file_list
-    
-    def get_toa(self, filename):
-        with open(os.path.join(self.toa_dir, filename[:-4] + ".txt")) as file:
-            toa = int(file.read())
-        return toa
-
-    def __getitem__(self, index):
-        data_file = os.path.join(self.data_path, self.files_list[index])
-        assert os.path.exists(data_file)
-        try:
-            data = np.load(data_file)
-            features = data['data']  # n_frames x 20 x 4096
-            labels = data['labels']  # 2
-            detections = data['det']  # n_frames x 19 x 6
-        except:
-            raise IOError('Load data error! File: %s'%(data_file))
-        if labels[1] > 0:
-            if self.toa != None:
-                toa = [self.toa]
-            else:
-                toa = [self.get_toa(self.files_list[index])]
-        else:
-            toa = [self.n_frames + 1]
-        
-        graph_edges, edge_weights = generate_st_graph(detections)
-
-        if self.toTensor:
-            features = torch.Tensor(features).to(self.device)         #  100 x 20 x 4096
-            labels = torch.Tensor(labels).to(self.device)
-            graph_edges = torch.Tensor(graph_edges).long().to(self.device)
-            edge_weights = torch.Tensor(edge_weights).to(self.device)
-            toa = torch.Tensor(toa).to(self.device)
-
-        if self.vis:
-            video_id = str(data['ID'])[5:11]  # e.g.: b001_000490_*
-            return features, labels, graph_edges, edge_weights, toa, detections, video_id
-        else:
-            return features, labels, graph_edges, edge_weights, toa
-
-# # For Muhmood - Geometrics
-# class DADDatasetCV(Dataset):
+# # Mahmood
+# class DADDataset(Dataset):
 #     def __init__(self, data_path, phase='training', toTensor=False, device=torch.device('cuda'), vis=False, n_frames=100, fps=20, toa=None):
 #         self.data_path = os.path.join(data_path, "obj_feat")
 #         self.toa_dir = os.path.join(data_path, "toas")
@@ -261,9 +98,9 @@ class DADDatasetCV(Dataset):
 #         self.n_frames = n_frames
 #         self.n_obj = 19
 #         self.fps = fps
-#         self.dim_feature = 6
+#         self.dim_feature = 4096
 
-#         filepath = os.path.join(self.data_path)
+#         filepath = os.path.join(self.data_path, phase)
 #         self.files_list = self.get_filelist(filepath)
 
 #     def __len__(self):
@@ -291,16 +128,12 @@ class DADDatasetCV(Dataset):
 #         return toa
 
 #     def __getitem__(self, index):
-#         data_file = os.path.join(self.data_path, self.files_list[index])
+#         data_file = os.path.join(self.data_path, self.phase, self.files_list[index])
 #         assert os.path.exists(data_file)
 #         try:
+#             # print("Mahmood Method - Geometrics")
 #             data = np.load(data_file)
-#             # features =  data['det']  # n_frames x 20 x 4096
-#             # DoTa
-#             # features = np.concatenate([np.full((features.shape[0], 1, 6), [0, 0, 1280, 720, 1, 0], dtype=np.float32), features], axis=1) 
-#             # DaDa
-#             # features = np.concatenate([np.full((features.shape[0], 1, 6), [0, 0, 1584, 660, 1, 0], dtype=np.float32), features], axis=1)
-
+#             # features = data['data']  # n_frames x 20 x 4096
 #             features = data['det']             # shape: (n_frames, 19, 6)
 #             original_data = data['data']       # shape: (n_frames, 20, 4096)
 
@@ -340,6 +173,173 @@ class DADDatasetCV(Dataset):
 #             return features, labels, graph_edges, edge_weights, toa, detections, video_id
 #         else:
 #             return features, labels, graph_edges, edge_weights, toa
+
+# class DADDatasetCV(Dataset):
+#     def __init__(self, data_path, phase='training', toTensor=False, device=torch.device('cuda'), vis=False, n_frames=100, fps=20, toa=None):
+#         self.data_path = os.path.join(data_path, "obj_feat")
+#         self.toa_dir = os.path.join(data_path, "toas")
+#         self.phase = phase
+#         self.toTensor = toTensor
+#         self.toa = toa
+#         self.device = device
+#         self.vis = vis
+#         self.n_frames = n_frames
+#         self.n_obj = 19
+#         self.fps = fps
+#         self.dim_feature = 4096
+
+#         filepath = os.path.join(self.data_path)
+#         self.files_list = self.get_filelist(filepath)
+
+#     def __len__(self):
+#         data_len = len(self.files_list)
+#         return data_len
+
+#     # def get_feature_dim(self, feature_name):
+#     #     if feature_name == 'vgg16':
+#     #         return 4096
+#     #     elif feature_name == 'res101':
+#     #         return 2048
+#     #     else:
+#     #         raise ValueError
+
+#     def get_filelist(self, filepath):
+#         assert os.path.exists(filepath), "Directory does not exist: %s"%(filepath)
+#         file_list = []
+#         for filename in sorted(os.listdir(filepath)):
+#             file_list.append(filename)
+#         return file_list
+    
+#     def get_toa(self, filename):
+#         with open(os.path.join(self.toa_dir, filename[:-4] + ".txt")) as file:
+#             toa = int(file.read())
+#         return toa
+
+#     def __getitem__(self, index):
+#         data_file = os.path.join(self.data_path, self.files_list[index])
+#         assert os.path.exists(data_file)
+#         try:
+#             data = np.load(data_file)
+#             features = data['data']  # n_frames x 20 x 4096
+#             labels = data['labels']  # 2
+#             detections = data['det']  # n_frames x 19 x 6
+#         except:
+#             raise IOError('Load data error! File: %s'%(data_file))
+#         if labels[1] > 0:
+#             if self.toa != None:
+#                 toa = [self.toa]
+#             else:
+#                 toa = [self.get_toa(self.files_list[index])]
+#         else:
+#             toa = [self.n_frames + 1]
+        
+#         graph_edges, edge_weights = generate_st_graph(detections)
+
+#         if self.toTensor:
+#             features = torch.Tensor(features).to(self.device)         #  100 x 20 x 4096
+#             labels = torch.Tensor(labels).to(self.device)
+#             graph_edges = torch.Tensor(graph_edges).long().to(self.device)
+#             edge_weights = torch.Tensor(edge_weights).to(self.device)
+#             toa = torch.Tensor(toa).to(self.device)
+
+#         if self.vis:
+#             video_id = str(data['ID'])[5:11]  # e.g.: b001_000490_*
+#             return features, labels, graph_edges, edge_weights, toa, detections, video_id
+#         else:
+#             return features, labels, graph_edges, edge_weights, toa
+
+# # For Muhmood - Geometrics
+class DADDatasetCV(Dataset):
+    def __init__(self, data_path, phase='training', toTensor=False, device=torch.device('cuda'), vis=False, n_frames=100, fps=20, toa=None):
+        self.data_path = os.path.join(data_path, "obj_feat")
+        self.toa_dir = os.path.join(data_path, "toas")
+        self.phase = phase
+        self.toTensor = toTensor
+        self.toa = toa
+        self.device = device
+        self.vis = vis
+        self.n_frames = n_frames
+        self.n_obj = 19
+        self.fps = fps
+        self.dim_feature = 6
+
+        filepath = os.path.join(self.data_path)
+        self.files_list = self.get_filelist(filepath)
+
+    def __len__(self):
+        data_len = len(self.files_list)
+        return data_len
+
+    # def get_feature_dim(self, feature_name):
+    #     if feature_name == 'vgg16':
+    #         return 4096
+    #     elif feature_name == 'res101':
+    #         return 2048
+    #     else:
+    #         raise ValueError
+
+    def get_filelist(self, filepath):
+        assert os.path.exists(filepath), "Directory does not exist: %s"%(filepath)
+        file_list = []
+        for filename in sorted(os.listdir(filepath)):
+            file_list.append(filename)
+        return file_list
+    
+    def get_toa(self, filename):
+        with open(os.path.join(self.toa_dir, filename[:-4] + ".txt")) as file:
+            toa = int(file.read())
+        return toa
+
+    def __getitem__(self, index):
+        data_file = os.path.join(self.data_path, self.files_list[index])
+        assert os.path.exists(data_file)
+        try:
+            data = np.load(data_file)
+            # features =  data['det']  # n_frames x 20 x 4096
+            # DoTa
+            # features = np.concatenate([np.full((features.shape[0], 1, 6), [0, 0, 1280, 720, 1, 0], dtype=np.float32), features], axis=1) 
+            # DaDa
+            # features = np.concatenate([np.full((features.shape[0], 1, 6), [0, 0, 1584, 660, 1, 0], dtype=np.float32), features], axis=1)
+
+            features = data['det']             # shape: (n_frames, 19, 6)
+            original_data = data['data']       # shape: (n_frames, 20, 4096)
+
+            # Step 1: Pad features from 6 → 4096 directly
+            padded_features = np.pad(features, ((0, 0), (0, 0), (0, 4096 - features.shape[2])), mode='constant', 
+                                     constant_values=0)
+
+            # Step 2: Extract and append the 0th index (preserving shape)
+            first_frame = original_data[:, 0:1, :]  # shape: (n_frames, 1, 4096)
+
+            # Step 3: Concatenate to get final output
+            features = np.concatenate([padded_features, first_frame], axis=1)
+            
+            labels = data['labels']  # 2
+            detections = data['det']  # n_frames x 19 x 6
+        except:
+            raise IOError('Load data error! File: %s'%(data_file))
+        if labels[1] > 0:
+            if self.toa != None:
+                toa = [self.toa]
+            else:
+                toa = [self.get_toa(self.files_list[index])]
+        else:
+            toa = [self.n_frames + 1]
+        
+        graph_edges, edge_weights = generate_st_graph(detections)
+
+        if self.toTensor:
+            features = torch.Tensor(features).to(self.device)         #  100 x 20 x 4096
+            labels = torch.Tensor(labels).to(self.device)
+            graph_edges = torch.Tensor(graph_edges).long().to(self.device)
+            edge_weights = torch.Tensor(edge_weights).to(self.device)
+            toa = torch.Tensor(toa).to(self.device)
+
+        if self.vis:
+            video_id = str(data['ID'])[5:11]  # e.g.: b001_000490_*
+            return features, labels, graph_edges, edge_weights, toa, detections, video_id
+        else:
+            return features, labels, graph_edges, edge_weights, toa
 
 
 # class A3DDataset(Dataset):
