@@ -77,10 +77,8 @@ def test_all(testdata_loader, model):
             # run inference
             for t in range(num_frames):
                 pred = all_outputs[t]['pred_mean']
-                # pred = pred.cpu().numpy() if pred.is_cuda else pred.detach().numpy()
-                # pred_frames[:, t] = np.exp(pred[:, 1]) / np.sum(np.exp(pred), axis=1)
-                softmax_pred = F.softmax(pred, dim=1)  # pred is still a tensor
-                pred_frames[:, t] = softmax_pred[:, 1].cpu().numpy()
+                pred = pred.cpu().numpy() if pred.is_cuda else pred.detach().numpy()
+                pred_frames[:, t] = np.exp(pred[:, 1]) / np.sum(np.exp(pred), axis=1)
             # gather results and ground truth
             all_pred.append(pred_frames)
             label_onehot = batch_ys.cpu().numpy()
