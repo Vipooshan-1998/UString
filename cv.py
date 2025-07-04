@@ -520,7 +520,7 @@ if __name__ == '__main__':
     dataset = DADDatasetCV(p.data_path, 'training', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
 
     folds = p.n_folds
-    kf = KFold(n_splits=folds, shuffle=True, random_state=42)
+    kf = KFold(n_splits=folds, shuffle=True, random_state=23)
 
     for fold, (train_idx, test_idx) in enumerate(kf.split(dataset)):
 
