@@ -19,7 +19,7 @@ from tensorboardX import SummaryWriter
 from tqdm import tqdm
 from sklearn.metrics import average_precision_score
 
-from src.DataLoader import DADDatasetCV, DADDataset
+from src.DataLoader import DADDatasetCV
 from sklearn.model_selection import KFold
 import torch.nn.functional as F
 
@@ -364,98 +364,98 @@ def update_final_model(src_file, dest_file):
     shutil.copyfile(src_file, dest_file)
 
 
-def test_eval():
-    ### --- CONFIG PATH ---
-    # data_path = os.path.join(ROOT_PATH, p.data_path, p.dataset)
-    data_path = p.data_path
-    # result path
-    result_dir = os.path.join(p.output_dir, p.dataset, 'test')
-    if not os.path.exists(result_dir):
-        os.makedirs(result_dir)
-    # visualization results
-    p.visualize = False if p.evaluate_all else p.visualize
-    vis_dir = None
-    if p.visualize:
-        vis_dir = os.path.join(result_dir, 'vis')
-        if not os.path.exists(vis_dir):
-            os.makedirs(vis_dir)
+# def test_eval():
+#     ### --- CONFIG PATH ---
+#     # data_path = os.path.join(ROOT_PATH, p.data_path, p.dataset)
+#     data_path = p.data_path
+#     # result path
+#     result_dir = os.path.join(p.output_dir, p.dataset, 'test')
+#     if not os.path.exists(result_dir):
+#         os.makedirs(result_dir)
+#     # visualization results
+#     p.visualize = False if p.evaluate_all else p.visualize
+#     vis_dir = None
+#     if p.visualize:
+#         vis_dir = os.path.join(result_dir, 'vis')
+#         if not os.path.exists(vis_dir):
+#             os.makedirs(vis_dir)
 
-    # gpu options
-    gpu_ids = [int(id) for id in p.gpus.split(',')]
-    os.environ['CUDA_VISIBLE_DEVICES'] = p.gpus
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+#     # gpu options
+#     gpu_ids = [int(id) for id in p.gpus.split(',')]
+#     os.environ['CUDA_VISIBLE_DEVICES'] = p.gpus
+#     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-    # create data loader
-    # if p.dataset == 'dad':
-    test_data = DADDataset(data_path, 'testing', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
-    # elif p.dataset == 'a3d':
-    #     from src.DataLoader import A3DDataset
-    #     test_data = A3DDataset(data_path, p.feature_name, 'test', toTensor=True, device=device, vis=True)
-    # elif p.dataset == 'crash':
-    #     from src.DataLoader import CrashDataset
-    #     test_data = CrashDataset(data_path, p.feature_name, 'test', toTensor=True, device=device, vis=True)
-    # else:
-    #     raise NotImplementedError
-    testdata_loader = DataLoader(dataset=test_data, batch_size=p.batch_size, shuffle=False, drop_last=True)
-    num_samples = len(test_data)
-    print("Number of testing samples: %d"%(num_samples))
+#     # create data loader
+#     # if p.dataset == 'dad':
+#     test_data = DADDataset(data_path, 'testing', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
+#     # elif p.dataset == 'a3d':
+#     #     from src.DataLoader import A3DDataset
+#     #     test_data = A3DDataset(data_path, p.feature_name, 'test', toTensor=True, device=device, vis=True)
+#     # elif p.dataset == 'crash':
+#     #     from src.DataLoader import CrashDataset
+#     #     test_data = CrashDataset(data_path, p.feature_name, 'test', toTensor=True, device=device, vis=True)
+#     # else:
+#     #     raise NotImplementedError
+#     testdata_loader = DataLoader(dataset=test_data, batch_size=p.batch_size, shuffle=False, drop_last=True)
+#     num_samples = len(test_data)
+#     print("Number of testing samples: %d"%(num_samples))
     
-    # building model
-    model = UString(feature_dim, p.hidden_dim, p.latent_dim, 
-                       n_layers=p.num_rnn, n_obj=test_data.n_obj, n_frames=test_data.n_frames, fps=test_data.fps, 
-                       with_saa=True, uncertain_ranking=True)
+#     # building model
+#     model = UString(feature_dim, p.hidden_dim, p.latent_dim, 
+#                        n_layers=p.num_rnn, n_obj=test_data.n_obj, n_frames=test_data.n_frames, fps=test_data.fps, 
+#                        with_saa=True, uncertain_ranking=True)
 
-    # start to evaluate
-    if p.evaluate_all:
-        model_dir = os.path.join(p.output_dir, p.dataset, 'snapshot')
-        assert os.path.exists(model_dir)
-        Epochs, APvid_all, AP_all, mTTA_all, TTA_R80_all, Unc_all = [], [], [], [], [], []
-        modelfiles = sorted(os.listdir(model_dir))
-        for filename in modelfiles:
-            epoch_str = filename.split("_")[-1].split(".pth")[0]
-            print("Evaluation for epoch: " + epoch_str)
-            model_file = os.path.join(model_dir, filename)
-            model, _, _ = load_checkpoint(model, filename=model_file, isTraining=False)
-            # run model inference
-            all_pred, all_labels, all_toas, all_uncertains, _ = test_all_vis(testdata_loader, model, vis=False, device=device)
-            # evaluate results
-            AP, mTTA, TTA_R80 = evaluation(all_pred, all_labels, all_toas, fps=test_data.fps)
-            mUncertains = np.mean(all_uncertains, axis=(0, 1))
-            all_vid_scores = [max(pred[:int(toa)]) for toa, pred in zip(all_toas, all_pred)]
-            AP_video = average_precision_score(all_labels, all_vid_scores)
-            APvid_all.append(AP_video)
-            # save
-            Epochs.append(epoch_str)
-            AP_all.append(AP)
-            mTTA_all.append(mTTA)
-            TTA_R80_all.append(TTA_R80)
-            Unc_all.append(mUncertains)
-        # print results to file
-        print_results(Epochs, APvid_all, AP_all, mTTA_all, TTA_R80_all, Unc_all, result_dir)
-    else:
-        result_file = os.path.join(vis_dir, "..", "pred_res.npz")
-        if not os.path.exists(result_file):
-            model, _, _ = load_checkpoint(model, filename=p.model_file, isTraining=False)
-            # run model inference
-            all_pred, all_labels, all_toas, all_uncertains, vis_data = test_all_vis(testdata_loader, model, vis=True, device=device)
-            # save predictions
-            np.savez(result_file[:-4], pred=all_pred, label=all_labels, toas=all_toas, uncertainties=all_uncertains, vis_data=vis_data)
-        else:
-            print("Result file exists. Loaded from cache.")
-            all_results = np.load(result_file, allow_pickle=True)
-            all_pred, all_labels, all_toas, all_uncertains, vis_data = \
-                all_results['pred'], all_results['label'], all_results['toas'], all_results['uncertainties'], all_results['vis_data']
-        # evaluate results
-        all_vid_scores = [max(pred[:int(toa)]) for toa, pred in zip(all_toas, all_pred)]
-        AP_video = average_precision_score(all_labels, all_vid_scores)
-        print("video-level AP=%.5f"%(AP_video))
-        AP, mTTA, TTA_R80 = evaluation(all_pred, all_labels, all_toas, fps=test_data.fps)
-        # evaluate uncertainties
-        mUncertains = np.mean(all_uncertains, axis=(0, 1))
-        print("Mean aleatoric uncertainty: %.6f"%(mUncertains[0]))
-        print("Mean epistemic uncertainty: %.6f"%(mUncertains[1]))
-        # visualize
-        vis_results(vis_data, p.batch_size, vis_dir)
+#     # start to evaluate
+#     if p.evaluate_all:
+#         model_dir = os.path.join(p.output_dir, p.dataset, 'snapshot')
+#         assert os.path.exists(model_dir)
+#         Epochs, APvid_all, AP_all, mTTA_all, TTA_R80_all, Unc_all = [], [], [], [], [], []
+#         modelfiles = sorted(os.listdir(model_dir))
+#         for filename in modelfiles:
+#             epoch_str = filename.split("_")[-1].split(".pth")[0]
+#             print("Evaluation for epoch: " + epoch_str)
+#             model_file = os.path.join(model_dir, filename)
+#             model, _, _ = load_checkpoint(model, filename=model_file, isTraining=False)
+#             # run model inference
+#             all_pred, all_labels, all_toas, all_uncertains, _ = test_all_vis(testdata_loader, model, vis=False, device=device)
+#             # evaluate results
+#             AP, mTTA, TTA_R80 = evaluation(all_pred, all_labels, all_toas, fps=test_data.fps)
+#             mUncertains = np.mean(all_uncertains, axis=(0, 1))
+#             all_vid_scores = [max(pred[:int(toa)]) for toa, pred in zip(all_toas, all_pred)]
+#             AP_video = average_precision_score(all_labels, all_vid_scores)
+#             APvid_all.append(AP_video)
+#             # save
+#             Epochs.append(epoch_str)
+#             AP_all.append(AP)
+#             mTTA_all.append(mTTA)
+#             TTA_R80_all.append(TTA_R80)
+#             Unc_all.append(mUncertains)
+#         # print results to file
+#         print_results(Epochs, APvid_all, AP_all, mTTA_all, TTA_R80_all, Unc_all, result_dir)
+#     else:
+#         result_file = os.path.join(vis_dir, "..", "pred_res.npz")
+#         if not os.path.exists(result_file):
+#             model, _, _ = load_checkpoint(model, filename=p.model_file, isTraining=False)
+#             # run model inference
+#             all_pred, all_labels, all_toas, all_uncertains, vis_data = test_all_vis(testdata_loader, model, vis=True, device=device)
+#             # save predictions
+#             np.savez(result_file[:-4], pred=all_pred, label=all_labels, toas=all_toas, uncertainties=all_uncertains, vis_data=vis_data)
+#         else:
+#             print("Result file exists. Loaded from cache.")
+#             all_results = np.load(result_file, allow_pickle=True)
+#             all_pred, all_labels, all_toas, all_uncertains, vis_data = \
+#                 all_results['pred'], all_results['label'], all_results['toas'], all_results['uncertainties'], all_results['vis_data']
+#         # evaluate results
+#         all_vid_scores = [max(pred[:int(toa)]) for toa, pred in zip(all_toas, all_pred)]
+#         AP_video = average_precision_score(all_labels, all_vid_scores)
+#         print("video-level AP=%.5f"%(AP_video))
+#         AP, mTTA, TTA_R80 = evaluation(all_pred, all_labels, all_toas, fps=test_data.fps)
+#         # evaluate uncertainties
+#         mUncertains = np.mean(all_uncertains, axis=(0, 1))
+#         print("Mean aleatoric uncertainty: %.6f"%(mUncertains[0]))
+#         print("Mean epistemic uncertainty: %.6f"%(mUncertains[1]))
+#         # visualize
+#         vis_results(vis_data, p.batch_size, vis_dir)
 
 
 if __name__ == '__main__':
