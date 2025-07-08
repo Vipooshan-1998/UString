@@ -610,6 +610,8 @@ if __name__ == '__main__':
                         help='The trained GCRNN model file for demo test only.')
     parser.add_argument('--output_dir', type=str, default='./output_debug/bayes_gcrnn/vgg16',
                         help='The directory of src need to save in the training.')
+    parser.add_argument('--geometric_features', action='store_true',
+                        help='If to use the geometric features. Default: False')
 
     p = parser.parse_args()
     if p.phase == 'test':
