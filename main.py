@@ -19,7 +19,7 @@ from tensorboardX import SummaryWriter
 from tqdm import tqdm
 from sklearn.metrics import average_precision_score
 
-from src.DataLoader import DADDataset
+from src.DataLoader import DADDataset, DADDatasetGeometrics
 
 seed = 123
 np.random.seed(seed)
@@ -238,8 +238,12 @@ def train_eval():
     # create data loader
     # if p.dataset == 'dad':
 
-    train_data = DADDataset(data_path, 'training', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
-    test_data = DADDataset(data_path, 'testing', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
+    if p.geometric_features:
+        train_data = DADDatasetGeometrics(data_path, 'training', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
+        test_data = DADDatasetGeometrics(data_path, 'testing', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
+    else:
+        train_data = DADDataset(data_path, 'training', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
+        test_data = DADDataset(data_path, 'testing', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
 
     # elif p.dataset == 'a3d':
     #     from src.DataLoader import A3DDataset
