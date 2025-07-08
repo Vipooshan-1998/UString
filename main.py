@@ -239,6 +239,7 @@ def train_eval():
     # if p.dataset == 'dad':
 
     if p.geometric_features:
+        print("-----------------------------    Geometric features are used    -----------------------------")
         train_data = DADDatasetGeometrics(data_path, 'training', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
         test_data = DADDatasetGeometrics(data_path, 'testing', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
     else:
