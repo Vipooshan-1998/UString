@@ -496,7 +496,7 @@ def test_eval():
 
     # create data loader
     # if p.dataset == 'dad':
-    test_data = DADDataset(data_path, 'testing', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa)
+    test_data = DADDataset(data_path, 'testing', toTensor=True, device=device, n_frames=p.n_frames, fps=p.fps, toa=p.toa, vis=True)
     # elif p.dataset == 'a3d':
     #     from src.DataLoader import A3DDataset
     #     test_data = A3DDataset(data_path, p.feature_name, 'test', toTensor=True, device=device, vis=True)
