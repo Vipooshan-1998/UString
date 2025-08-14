@@ -546,8 +546,7 @@ def test_eval():
         if not os.path.exists(result_file):
             model, _, _ = load_checkpoint(model, filename=p.model_file, isTraining=False)
             # run model inference
-            # all_pred, all_labels, all_toas, all_uncertains, vis_data = test_all_vis(testdata_loader, model, vis=True, device=device)
-            test_all(testdata_loader, model)
+            all_pred, all_labels, all_toas, all_uncertains, vis_data = test_all_vis(testdata_loader, model, vis=True, device=device)
             # save predictions
             np.savez(result_file[:-4], pred=all_pred, label=all_labels, toas=all_toas, uncertainties=all_uncertains, vis_data=vis_data)
         else:
@@ -555,17 +554,17 @@ def test_eval():
             all_results = np.load(result_file, allow_pickle=True)
             all_pred, all_labels, all_toas, all_uncertains, vis_data = \
                 all_results['pred'], all_results['label'], all_results['toas'], all_results['uncertainties'], all_results['vis_data']
-        # # evaluate results
-        # all_vid_scores = [max(pred[:int(toa)]) for toa, pred in zip(all_toas, all_pred)]
-        # AP_video = average_precision_score(all_labels, all_vid_scores)
-        # print("video-level AP=%.5f"%(AP_video))
-        # AP, mTTA, TTA_R80 = evaluation(all_pred, all_labels, all_toas, fps=test_data.fps)
-        # # evaluate uncertainties
-        # mUncertains = np.mean(all_uncertains, axis=(0, 1))
-        # print("Mean aleatoric uncertainty: %.6f"%(mUncertains[0]))
-        # print("Mean epistemic uncertainty: %.6f"%(mUncertains[1]))
-        # # visualize
-        # vis_results(vis_data, p.batch_size, vis_dir)
+        # evaluate results
+        all_vid_scores = [max(pred[:int(toa)]) for toa, pred in zip(all_toas, all_pred)]
+        AP_video = average_precision_score(all_labels, all_vid_scores)
+        print("video-level AP=%.5f"%(AP_video))
+        AP, mTTA, TTA_R80 = evaluation(all_pred, all_labels, all_toas, fps=test_data.fps)
+        # evaluate uncertainties
+        mUncertains = np.mean(all_uncertains, axis=(0, 1))
+        print("Mean aleatoric uncertainty: %.6f"%(mUncertains[0]))
+        print("Mean epistemic uncertainty: %.6f"%(mUncertains[1]))
+        # visualize
+        vis_results(vis_data, p.batch_size, vis_dir)
 
 
 if __name__ == '__main__':
