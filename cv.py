@@ -304,7 +304,7 @@ def train_eval(traindata_loader, testdata_loader, fold):
             inputs = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True) 
             # flop_counter = FlopCounterMode(mods=model, display=False, depth=None)
             # only measure FLOPs for the first batch
-            if batch_i == 0:
+            if i == 0:
                 with torch.no_grad():
                     with FlopTensorDispatchMode(model) as ftdm:
                         out = model(X, edge_index, img_feat, video_adj_list,
