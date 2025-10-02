@@ -311,11 +311,20 @@ def train_eval(traindata_loader, testdata_loader, fold):
         for i, (batch_xs, batch_ys, graph_edges, edge_weights, batch_toas) in enumerate(traindata_loader):
             # ipdb.set_trace()
             optimizer.zero_grad()
-            losses, all_outputs, hidden_st = model(batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, nbatch=len(traindata_loader), eval_uncertain=True)
+            # losses, all_outputs, hidden_st = model(batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, nbatch=len(traindata_loader), eval_uncertain=True)
 
 
-            macs, params = get_model_complexity_info(model, (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True), 
-                                         as_strings=True, verbose=False)
+            # Wrap model for FLOPs calculation
+            extra_args = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True)
+            wrapped_model = FLOPsWrapper(model, extra_args)
+        
+            macs, params = get_model_complexity_info(
+                wrapped_model,
+                (batch_xs,),  # only the main input goes here
+                as_strings=True,
+                print_per_layer_stat=False,
+                verbose=False
+            )
             print(f"FLOPs: {macs}, Params: {params}")
             # # ----------------------
             # # Run FLOP analysis
