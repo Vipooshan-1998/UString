@@ -23,6 +23,15 @@ from src.DataLoader import DADDatasetCV
 from sklearn.model_selection import KFold
 import torch.nn.functional as F
 
+# Patch torchtnt before importing it
+import sys
+import types
+import typing_extensions
+
+# Create a fake 'typing' module that redirects Literal to typing_extensions.Literal
+import typing
+if not hasattr(typing, "Literal"):
+    typing.Literal = typing_extensions.Literal
 from torchtnt.utils.flops import FlopTensorDispatchMode
 from collections import defaultdict
 import copy
