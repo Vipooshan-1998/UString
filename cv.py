@@ -23,7 +23,7 @@ from src.DataLoader import DADDatasetCV
 from sklearn.model_selection import KFold
 import torch.nn.functional as F
 
-from ptflops import get_model_complexity_info
+# from ptflops import get_model_complexity_info
 from fvcore.nn import FlopCountAnalysis
 # Patch torchtnt before importing it
 import sys
@@ -312,7 +312,6 @@ def train_eval(traindata_loader, testdata_loader, fold):
             # ipdb.set_trace()
             optimizer.zero_grad()
             # losses, all_outputs, hidden_st = model(batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, nbatch=len(traindata_loader), eval_uncertain=True)
-
 
 
             # Prepare input tuple exactly like your forward
