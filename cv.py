@@ -301,7 +301,7 @@ def train_eval(traindata_loader, testdata_loader, fold):
             # ----------------------
             # Run FLOP analysis
             # ----------------------
-            inputs = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, nbatch=len(traindata_loader), eval_uncertain=True) 
+            inputs = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True) 
             # flop_counter = FlopCounterMode(mods=model, display=False, depth=None)
             # only measure FLOPs for the first batch
             if batch_i == 0:
