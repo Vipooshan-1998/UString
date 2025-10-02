@@ -23,7 +23,7 @@ from src.DataLoader import DADDatasetCV
 from sklearn.model_selection import KFold
 import torch.nn.functional as F
 
-# from ptflops import get_model_complexity_info
+from ptflops import get_model_complexity_info
 from fvcore.nn import FlopCountAnalysis
 # Patch torchtnt before importing it
 import sys
@@ -314,18 +314,31 @@ def train_eval(traindata_loader, testdata_loader, fold):
             # losses, all_outputs, hidden_st = model(batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, nbatch=len(traindata_loader), eval_uncertain=True)
 
 
-            # Prepare input tuple exactly like your forward
-            inputs = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True)
+            # Define a lambda that passes all extra arguments to the model
+            input_shape = (batch_xs,)
+            macs, params = get_model_complexity_info(
+                lambda x: model(x, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True),
+                input_shape,
+                as_strings=True,
+                print_per_layer_stat=False,
+                verbose=False
+            )
+            print(f"FLOPs: {macs}, Params: {params}")
+            # macs, params = get_model_complexity_info(wrapped_model, (batch_xs,), as_strings=True, verbose=False)
+            # print(f"FLOPs: {macs}, Params: {params}")
+
+            # # Prepare input tuple exactly like your forward
+            # inputs = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True)
             
-            # Define a simple forward wrapper
-            def forward_for_flops(*args):
-                out = model(*args)
-                if isinstance(out, (tuple, list)):
-                    return out[0]  # first tensor only
-                return out
+            # # Define a simple forward wrapper
+            # def forward_for_flops(*args):
+            #     out = model(*args)
+            #     if isinstance(out, (tuple, list)):
+            #         return out[0]  # first tensor only
+            #     return out
             
-            flops = FlopCountAnalysis(forward_for_flops, inputs)
-            print("FLOPs:", flops.total())
+            # flops = FlopCountAnalysis(forward_for_flops, inputs)
+            # print("FLOPs:", flops.total())
             # # ----------------------
             # # Run FLOP analysis
             # # ----------------------
