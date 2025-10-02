@@ -24,7 +24,7 @@ from sklearn.model_selection import KFold
 import torch.nn.functional as F
 
 from ptflops import get_model_complexity_info
-
+from fvcore.nn import FlopCountAnalysis
 # Patch torchtnt before importing it
 import sys
 import types
@@ -314,18 +314,19 @@ def train_eval(traindata_loader, testdata_loader, fold):
             # losses, all_outputs, hidden_st = model(batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, nbatch=len(traindata_loader), eval_uncertain=True)
 
 
-            # Wrap model for FLOPs calculation
-            extra_args = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True)
-            wrapped_model = FLOPsWrapper(model, extra_args)
-        
-            macs, params = get_model_complexity_info(
-                wrapped_model,
-                (batch_xs,),  # only the main input goes here
-                as_strings=True,
-                print_per_layer_stat=False,
-                verbose=False
-            )
-            print(f"FLOPs: {macs}, Params: {params}")
+
+            # Prepare input tuple exactly like your forward
+            inputs = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True)
+            
+            # Define a simple forward wrapper
+            def forward_for_flops(*args):
+                out = model(*args)
+                if isinstance(out, (tuple, list)):
+                    return out[0]  # first tensor only
+                return out
+            
+            flops = FlopCountAnalysis(forward_for_flops, inputs)
+            print("FLOPs:", flops.total())
             # # ----------------------
             # # Run FLOP analysis
             # # ----------------------
