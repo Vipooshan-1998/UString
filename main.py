@@ -269,38 +269,38 @@ def train_eval():
     #                    n_layers=p.num_rnn, n_obj=train_data.n_obj, n_frames=train_data.n_frames, fps=train_data.fps, 
     #                    with_saa=True, uncertain_ranking=True)
 
-    # ----------------------
-    # Run FLOP analysis
-    # ----------------------
-    inputs = (feature_dim, p.hidden_dim, p.latent_dim, n_layers=p.num_rnn, n_obj=train_data.n_obj, 
-                       n_frames=train_data.n_frames, fps=train_data.fps, 
-                       with_saa=True, uncertain_ranking=True)          # match forward signature
-    # flop_counter = FlopCounterMode(mods=model, display=False, depth=None)
-    # only measure FLOPs for the first batch
-    if batch_i == 0:
-        with torch.no_grad():
-            with FlopTensorDispatchMode(model) as ftdm:
-                out = model(X, edge_index, img_feat, video_adj_list,
-                            edge_embeddings, temporal_adj_list,
-                            temporal_edge_w, batch_vec)
-                if isinstance(out, (tuple, list)):
-                    out = out[0]
-                    _ = out.mean()
-                flops_forward = copy.deepcopy(ftdm.flop_counts)
+    # # ----------------------
+    # # Run FLOP analysis
+    # # ----------------------
+    # inputs = (feature_dim, p.hidden_dim, p.latent_dim, n_layers=p.num_rnn, n_obj=train_data.n_obj, 
+    #                    n_frames=train_data.n_frames, fps=train_data.fps, 
+    #                    with_saa=True, uncertain_ranking=True)          # match forward signature
+    # # flop_counter = FlopCounterMode(mods=model, display=False, depth=None)
+    # # only measure FLOPs for the first batch
+    # if batch_i == 0:
+    #     with torch.no_grad():
+    #         with FlopTensorDispatchMode(model) as ftdm:
+    #             out = model(X, edge_index, img_feat, video_adj_list,
+    #                         edge_embeddings, temporal_adj_list,
+    #                         temporal_edge_w, batch_vec)
+    #             if isinstance(out, (tuple, list)):
+    #                 out = out[0]
+    #                 _ = out.mean()
+    #             flops_forward = copy.deepcopy(ftdm.flop_counts)
     
-        # flatten + sum
-        total_flops = 0
-        stack = [flops_forward]
-        while stack:
-            current = stack.pop()
-            for v in current.values():
-                if isinstance(v, (dict, defaultdict)):
-                    stack.append(v)
-                else:
-                    total_flops += v
+    #     # flatten + sum
+    #     total_flops = 0
+    #     stack = [flops_forward]
+    #     while stack:
+    #         current = stack.pop()
+    #         for v in current.values():
+    #             if isinstance(v, (dict, defaultdict)):
+    #                 stack.append(v)
+    #             else:
+    #                 total_flops += v
     
-        print("Inference FLOPs (first batch):", total_flops)
-        # ---------------- End of Flops Calculation ---------------------
+    #     print("Inference FLOPs (first batch):", total_flops)
+    #     # ---------------- End of Flops Calculation ---------------------
 
     # optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=p.base_lr)
