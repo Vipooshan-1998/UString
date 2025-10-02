@@ -297,6 +297,40 @@ def train_eval(traindata_loader, testdata_loader, fold):
             # ipdb.set_trace()
             optimizer.zero_grad()
             losses, all_outputs, hidden_st = model(batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, nbatch=len(traindata_loader), eval_uncertain=True)
+            
+            # ----------------------
+            # Run FLOP analysis
+            # ----------------------
+            inputs = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, 
+                                nbatch=len(traindata_loader), eval_uncertain=True)          # match forward signature
+            # flop_counter = FlopCounterMode(mods=model, display=False, depth=None)
+            # only measure FLOPs for the first batch
+            if batch_i == 0:
+                with torch.no_grad():
+                    with FlopTensorDispatchMode(model) as ftdm:
+                        out = model(X, edge_index, img_feat, video_adj_list,
+                                    edge_embeddings, temporal_adj_list,
+                                    temporal_edge_w, batch_vec)
+                        if isinstance(out, (tuple, list)):
+                            out = out[0]
+                            _ = out.mean()
+                        flops_forward = copy.deepcopy(ftdm.flop_counts)
+            
+                # flatten + sum
+                total_flops = 0
+                stack = [flops_forward]
+                while stack:
+                    current = stack.pop()
+                    for v in current.values():
+                        if isinstance(v, (dict, defaultdict)):
+                            stack.append(v)
+                        else:
+                            total_flops += v
+            
+                print("Inference FLOPs (first batch):", total_flops)
+                # ---------------- End of Flops Calculation ---------------------
+
+            
             complexity_loss = losses['log_posterior'] - losses['log_prior']
             losses['total_loss'] = p.loss_alpha * complexity_loss + losses['cross_entropy']
             losses['total_loss'] += p.loss_beta * losses['auxloss']
