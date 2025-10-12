@@ -24,7 +24,7 @@ from sklearn.model_selection import KFold
 import torch.nn.functional as F
 
 # from ptflops import get_model_complexity_info
-# from fvcore.nn import FlopCountAnalysis
+from fvcore.nn import FlopCountAnalysis
 # # Patch torchtnt before importing it
 # import sys
 # import types
