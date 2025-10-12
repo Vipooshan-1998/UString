@@ -23,20 +23,20 @@ from src.DataLoader import DADDatasetCV
 from sklearn.model_selection import KFold
 import torch.nn.functional as F
 
-from ptflops import get_model_complexity_info
-from fvcore.nn import FlopCountAnalysis
-# Patch torchtnt before importing it
-import sys
-import types
-import typing_extensions
+# from ptflops import get_model_complexity_info
+# from fvcore.nn import FlopCountAnalysis
+# # Patch torchtnt before importing it
+# import sys
+# import types
+# import typing_extensions
 
-# Create a fake 'typing' module that redirects Literal to typing_extensions.Literal
-import typing
-if not hasattr(typing, "Literal"):
-    typing.Literal = typing_extensions.Literal
-from torchtnt.utils.flops import FlopTensorDispatchMode
-from collections import defaultdict
-import copy
+# # Create a fake 'typing' module that redirects Literal to typing_extensions.Literal
+# import typing
+# if not hasattr(typing, "Literal"):
+#     typing.Literal = typing_extensions.Literal
+# from torchtnt.utils.flops import FlopTensorDispatchMode
+# from collections import defaultdict
+# import copy
 
 seed = 123
 np.random.seed(seed)
@@ -328,7 +328,7 @@ def train_eval(traindata_loader, testdata_loader, fold):
             # print(f"FLOPs: {macs}, Params: {params}")
 
             # # Prepare input tuple exactly like your forward
-            # inputs = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True)
+            inputs = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True)
             
             # # Define a simple forward wrapper
             # def forward_for_flops(*args):
@@ -337,8 +337,8 @@ def train_eval(traindata_loader, testdata_loader, fold):
             #         return out[0]  # first tensor only
             #     return out
             
-            # flops = FlopCountAnalysis(forward_for_flops, inputs)
-            # print("FLOPs:", flops.total())
+            flops = FlopCountAnalysis(forward_for_flops, inputs)
+            print("FLOPs:", flops.total())
             # # ----------------------
             # # Run FLOP analysis
             # # ----------------------
