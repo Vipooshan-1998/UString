@@ -30,7 +30,7 @@ feature_dim = 4096
 
 import random
 # FLOPs Calculation
-from fvcore.nn import FlopCountAnalysis, parameter_count_table
+# from fvcore.nn import FlopCountAnalysis, parameter_count_table
 # from torchtnt.utils.flops import FlopTensorDispatchMode
 # from collections import defaultdict
 # import copy
@@ -271,17 +271,17 @@ def train_eval():
                        n_layers=p.num_rnn, n_obj=train_data.n_obj, n_frames=train_data.n_frames, fps=train_data.fps, 
                        with_saa=True, uncertain_ranking=True)
 
-    # # ----------------------
-    # # Run FLOP analysis
-    # # ----------------------
-    inputs = (feature_dim, p.hidden_dim, p.latent_dim, n_layers=p.num_rnn, n_obj=train_data.n_obj, 
-                       n_frames=train_data.n_frames, fps=train_data.fps, 
-                       with_saa=True, uncertain_ranking=True)          # match forward signature
-    # FLOPs Calculation:
-    flops = FlopCountAnalysis(model, inputs)
-    print("Total FLOPs:", flops.total())
-    print("FLOPs per layer:\n", flops.by_module())
-    print(parameter_count_table(model))
+    # # # ----------------------
+    # # # Run FLOP analysis
+    # # # ----------------------
+    # inputs = (feature_dim, p.hidden_dim, p.latent_dim, n_layers=p.num_rnn, n_obj=train_data.n_obj, 
+    #                    n_frames=train_data.n_frames, fps=train_data.fps, 
+    #                    with_saa=True, uncertain_ranking=True)          # match forward signature
+    # # FLOPs Calculation:
+    # flops = FlopCountAnalysis(model, inputs)
+    # print("Total FLOPs:", flops.total())
+    # print("FLOPs per layer:\n", flops.by_module())
+    # print(parameter_count_table(model))
 
     # # flop_counter = FlopCounterMode(mods=model, display=False, depth=None)
     # # only measure FLOPs for the first batch
