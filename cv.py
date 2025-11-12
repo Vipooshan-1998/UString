@@ -24,7 +24,7 @@ from sklearn.model_selection import KFold
 import torch.nn.functional as F
 
 # from ptflops import get_model_complexity_info
-from fvcore.nn import FlopCountAnalysis
+# from fvcore.nn import FlopCountAnalysis
 # # Patch torchtnt before importing it
 # import sys
 # import types
@@ -293,6 +293,10 @@ def train_eval(traindata_loader, testdata_loader, fold):
     model = model.to(device=device)
     model.train() # set the model into training status
 
+    ## Got this from Graph(Graph)
+    total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"Total trainable parameters: {total_params}")
+
     # resume training 
     start_epoch = -1
     if p.resume:
@@ -321,8 +325,8 @@ def train_eval(traindata_loader, testdata_loader, fold):
             print(f"Total FLOPs: {flops}")            # only measure FLOPs for the first batch
             print(f"Total Params: {params}") 
 
-            flops = FlopCountAnalysis(model, inputs)
-            print(f"fvcore Total FLOPs: {flops.total()}")   
+            # flops = FlopCountAnalysis(model, inputs)
+            # print(f"fvcore Total FLOPs: {flops.total()}")   
             
             # # Define a lambda that passes all extra arguments to the model
             # input_shape = (batch_xs,)
