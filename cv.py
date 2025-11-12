@@ -24,19 +24,20 @@ from sklearn.model_selection import KFold
 import torch.nn.functional as F
 
 # from ptflops import get_model_complexity_info
-# from fvcore.nn import FlopCountAnalysis
+from fvcore.nn import FlopCountAnalysis
 # # Patch torchtnt before importing it
 # import sys
 # import types
 # import typing_extensions
 
 # Create a fake 'typing' module that redirects Literal to typing_extensions.Literal
-import typing
-if not hasattr(typing, "Literal"):
-    typing.Literal = typing_extensions.Literal
-from torchtnt.utils.flops import FlopTensorDispatchMode
-from collections import defaultdict
-import copy
+# import typing
+# if not hasattr(typing, "Literal"):
+#     typing.Literal = typing_extensions.Literal
+# from torchtnt.utils.flops import FlopTensorDispatchMode
+# from collections import defaultdict
+# import copy
+
 from thop import profile
 
 seed = 123
@@ -320,6 +321,9 @@ def train_eval(traindata_loader, testdata_loader, fold):
             print(f"Total FLOPs: {flops}")            # only measure FLOPs for the first batch
             print(f"Total Params: {params}") 
 
+            flops = FlopCountAnalysis(model, inputs)
+            print(f"fvcore Total FLOPs: {flops.total()}")   
+            
             # # Define a lambda that passes all extra arguments to the model
             # input_shape = (batch_xs,)
             # macs, params = get_model_complexity_info(
@@ -350,27 +354,27 @@ def train_eval(traindata_loader, testdata_loader, fold):
             # ----------------------
             # flop_counter = FlopCounterMode(mods=model, display=False, depth=None)
             # only measure FLOPs for the first batch
-            if i == 0:
-                with torch.no_grad():
-                    with FlopTensorDispatchMode(model) as ftdm:
-                        out = model(batch_xs, batch_ys, batch_toas, graph_edges, None, edge_weights, 2, len(traindata_loader), False, True)
-                        if isinstance(out, (tuple, list)):
-                            out = out[0]
-                            _ = out.mean()
-                        flops_forward = copy.deepcopy(ftdm.flop_counts)
+            # if i == 0:
+            #     with torch.no_grad():
+            #         with FlopTensorDispatchMode(model) as ftdm:
+            #             out = model(batch_xs, batch_ys, batch_toas, graph_edges, None, edge_weights, 2, len(traindata_loader), False, True)
+            #             if isinstance(out, (tuple, list)):
+            #                 out = out[0]
+            #                 _ = out.mean()
+            #             flops_forward = copy.deepcopy(ftdm.flop_counts)
             
-                # flatten + sum
-                total_flops = 0
-                stack = [flops_forward]
-                while stack:
-                    current = stack.pop()
-                    for v in current.values():
-                        if isinstance(v, (dict, defaultdict)):
-                            stack.append(v)
-                        else:
-                            total_flops += v
+            #     # flatten + sum
+            #     total_flops = 0
+            #     stack = [flops_forward]
+            #     while stack:
+            #         current = stack.pop()
+            #         for v in current.values():
+            #             if isinstance(v, (dict, defaultdict)):
+            #                 stack.append(v)
+            #             else:
+            #                 total_flops += v
             
-                print("Inference FLOPs (first batch):", total_flops)
+            #     print("Inference FLOPs (first batch):", total_flops)
             #     # ---------------- End of Flops Calculation ---------------------
 
             
