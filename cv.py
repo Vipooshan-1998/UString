@@ -312,13 +312,13 @@ def train_eval(traindata_loader, testdata_loader, fold):
         for i, (batch_xs, batch_ys, graph_edges, edge_weights, batch_toas) in enumerate(traindata_loader):
             # ipdb.set_trace()
             optimizer.zero_grad()
-            # losses, all_outputs, hidden_st = model(batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, nbatch=len(traindata_loader), eval_uncertain=True)
+            losses, all_outputs, hidden_st = model(batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, nbatch=len(traindata_loader), eval_uncertain=True)
 
 
-            inputs = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True)
-            flops, params = profile(model, inputs=inputs)
-            print(f"Total FLOPs: {flops}")            # only measure FLOPs for the first batch
-            print(f"Total Params: {params}") 
+            # inputs = (batch_xs, batch_ys, batch_toas, graph_edges, edge_weights, 2, len(traindata_loader), True)
+            # flops, params = profile(model, inputs=inputs)
+            # print(f"Total FLOPs: {flops}")            # only measure FLOPs for the first batch
+            # print(f"Total Params: {params}") 
 
             # # Define a lambda that passes all extra arguments to the model
             # input_shape = (batch_xs,)
