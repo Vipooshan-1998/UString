@@ -345,32 +345,32 @@ def train_eval(traindata_loader, testdata_loader, fold):
             
             # flops = FlopCountAnalysis(forward_for_flops, inputs)
             # print("FLOPs:", flops.total())
-            # # ----------------------
-            # # Run FLOP analysis
-            # # ----------------------
-            # # flop_counter = FlopCounterMode(mods=model, display=False, depth=None)
-            # # only measure FLOPs for the first batch
-            # if i == 0:
-            #     with torch.no_grad():
-            #         with FlopTensorDispatchMode(model) as ftdm:
-            #             out = model(batch_xs, batch_ys, batch_toas, graph_edges, edge_weights=edge_weights, npass=2, nbatch=len(traindata_loader), eval_uncertain=True)
-            #             if isinstance(out, (tuple, list)):
-            #                 out = out[0]
-            #                 _ = out.mean()
-            #             flops_forward = copy.deepcopy(ftdm.flop_counts)
+            # ----------------------
+            # Run FLOP analysis
+            # ----------------------
+            # flop_counter = FlopCounterMode(mods=model, display=False, depth=None)
+            # only measure FLOPs for the first batch
+            if i == 0:
+                with torch.no_grad():
+                    with FlopTensorDispatchMode(model) as ftdm:
+                        out = model(batch_xs, batch_ys, batch_toas, graph_edges, None, edge_weights, 2, len(traindata_loader), False, True)
+                        if isinstance(out, (tuple, list)):
+                            out = out[0]
+                            _ = out.mean()
+                        flops_forward = copy.deepcopy(ftdm.flop_counts)
             
-            #     # flatten + sum
-            #     total_flops = 0
-            #     stack = [flops_forward]
-            #     while stack:
-            #         current = stack.pop()
-            #         for v in current.values():
-            #             if isinstance(v, (dict, defaultdict)):
-            #                 stack.append(v)
-            #             else:
-            #                 total_flops += v
+                # flatten + sum
+                total_flops = 0
+                stack = [flops_forward]
+                while stack:
+                    current = stack.pop()
+                    for v in current.values():
+                        if isinstance(v, (dict, defaultdict)):
+                            stack.append(v)
+                        else:
+                            total_flops += v
             
-            #     print("Inference FLOPs (first batch):", total_flops)
+                print("Inference FLOPs (first batch):", total_flops)
             #     # ---------------- End of Flops Calculation ---------------------
 
             
