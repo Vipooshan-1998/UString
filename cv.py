@@ -30,10 +30,10 @@ import torch.nn.functional as F
 # import types
 # import typing_extensions
 
-# # Create a fake 'typing' module that redirects Literal to typing_extensions.Literal
-# import typing
-# if not hasattr(typing, "Literal"):
-#     typing.Literal = typing_extensions.Literal
+# Create a fake 'typing' module that redirects Literal to typing_extensions.Literal
+import typing
+if not hasattr(typing, "Literal"):
+    typing.Literal = typing_extensions.Literal
 from torchtnt.utils.flops import FlopTensorDispatchMode
 from collections import defaultdict
 import copy
