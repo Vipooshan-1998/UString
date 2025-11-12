@@ -284,6 +284,9 @@ def train_eval(traindata_loader, testdata_loader, fold):
                        n_layers=p.num_rnn, n_obj=19, n_frames=p.n_frames, fps=p.fps, 
                        with_saa=True, uncertain_ranking=True)
 
+    ## Got this from Graph(Graph)
+    print(model)
+
     # optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=p.base_lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
