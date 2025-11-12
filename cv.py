@@ -34,9 +34,9 @@ import torch.nn.functional as F
 # import typing
 # if not hasattr(typing, "Literal"):
 #     typing.Literal = typing_extensions.Literal
-# from torchtnt.utils.flops import FlopTensorDispatchMode
-# from collections import defaultdict
-# import copy
+from torchtnt.utils.flops import FlopTensorDispatchMode
+from collections import defaultdict
+import copy
 from thop import profile
 
 seed = 123
