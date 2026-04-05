@@ -27,6 +27,7 @@ torch.manual_seed(seed)
 ROOT_PATH = os.path.dirname(__file__)
 
 feature_dim = 4096
+time_list = []
 
 import random
 # FLOPs Calculation
@@ -63,8 +64,12 @@ def test_all(testdata_loader, model):
     with torch.no_grad():
         for i, (batch_xs, batch_ys, graph_edges, edge_weights, batch_toas) in enumerate(testdata_loader):
             # run forward inference
+            stime = time.time()
             losses, all_outputs, hiddens = model(batch_xs, batch_ys, batch_toas, graph_edges, 
                     hidden_in=None, edge_weights=edge_weights, npass=10, nbatch=len(testdata_loader), testing=False)
+            etime = time.time()
+            duration = etime - stime
+            time_list.append(duration)
             # make total loss
             losses['total_loss'] = p.loss_alpha * (losses['log_posterior'] - losses['log_prior']) + losses['cross_entropy']
             losses['total_loss'] += p.loss_beta * losses['auxloss']
@@ -90,7 +95,9 @@ def test_all(testdata_loader, model):
     all_pred = np.vstack((np.vstack(all_pred[:-1]), all_pred[-1]))
     all_labels = np.hstack((np.hstack(all_labels[:-1]), all_labels[-1]))
     all_toas = np.hstack((np.hstack(all_toas[:-1]), all_toas[-1]))
-    
+
+    print("Test mean time: ", np.mean(time_list))
+
     return all_pred, all_labels, all_toas, losses_all
 
 
