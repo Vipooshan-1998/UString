@@ -97,6 +97,7 @@ def test_all(testdata_loader, model):
     all_toas = np.hstack((np.hstack(all_toas[:-1]), all_toas[-1]))
 
     print("Test mean time: ", np.mean(time_list))
+    print("Total sample time count: ", np.size(time_list))
 
     return all_pred, all_labels, all_toas, losses_all
 
